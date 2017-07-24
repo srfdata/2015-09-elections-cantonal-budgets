@@ -1,0 +1,243 @@
+---
+title: 'Federal Elections 2015: Cantonal Budgets'
+subtitle: 'Preprocessing and analysis'
+author: "SRF Data, Timo Grossenbacher (timo.grossenbacher@srf.ch)" 
+date: "09/29/2015"
+output:
+ html_document:
+   code_folding: show
+   theme: simplex
+   toc: yes
+   comment: NA
+   echo: TRUE
+   message: FALSE
+   warning: FALSE
+   fig.width: 10
+   toc_float:
+     collapsed: false
+     smooth_scroll: false
+---
+
+
+## Notes
+
+This document illustrates the preprocessing of the dataset visualized in this [article on srf.ch](http://www.srf.ch/news/wahlen/wahlkampf/parteibudgets-linke-sind-transparenter-als-die-buergerlichen).
+
+SRF Data attaches great importance to transparent and reproducible data preprocessing and -analysis. SRF Data believes in the principles of open data but also open and reproducible methods. Third parties should be empowered to build on the work of SRF Data and to generate new analyses and applications. 
+
+### R-Script & processed data
+
+The preprocessing and analysis of the data was conducted in the [R project for statistical computing](https://www.r-project.org/). The RMarkdown script used to generate this document and all the resulting data can be downloaded [under this link](http://srfdata.github.io/2015-09-elections-cantonal-budgets/rscript.zip). Through executing `main.Rmd`, the herein described process can be reproduced and this document can be generated. In the course of this, data from the folder `ìnput` will be processed and results will be written to `output`. 
+
+**Attention**: Please set your working directory in the first code chunk!
+
+### GitHub
+
+The code for the herein described process can also be freely downloaded from [https://github.com/srfdata/2015-09-elections-cantonal-budgets](https://github.com/srfdata/2015-09-elections-cantonal-budgets). Criticism in the form of GitHub issues and pull requests is very welcome! 
+
+### License
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" property="dct:title">2015-09-elections-cantonal-budgets</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="https://github.com/srfdata/2015-09-elections-cantonal-budgets" property="cc:attributionName" rel="cc:attributionURL">SRF Data</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+
+### Exclusion of liability
+
+The published information has been collated carefully, but no guarantee is offered of its completeness, correctness or up-to-date nature. No liability is accepted for damage or loss incurred from the use of this script or the information drawn from it. This exclusion of liability also applies to third-party content that is accessible via this offer.
+
+### Other projects
+
+All code & data from [SRF Data](http://srf.ch/data) is available under [http://srfdata.github.io](http://srfdata.github.io).
+
+## Data description
+
+### Original data source
+
+The data shown here is the result of an email questionnaire conducted by SRF Data and Radio Télévision Suisse (RTS) in July and August 2015 with over 200 cantonal party sections. See the questions asked [here](http://www.srfcdn.ch/elections15/assets/mails_budgets.pdf). In the case of a misunderstanding, clarification was asked for, when no answer was received, follow-up questions were asked.
+
+The data shown is based exclusively on the cantonal party’s own declaration and has not been verified by other sources. A statement on the accuracy of this data can therefore not be made, neither on the total budget nor on the sources of finance. A question mark for the financial sources can have the following meanings: 1. the cantonal party cannot give any declaration, 2. the cantonal party does not want to make any declaration, 3. the figures could not be calculated. In the canton of Jura, the budget cannot always be separated between the federal and cantonal elections, which both take place on October 18.
+
+* `input/data.csv` - The original survey response data, already double-checked, preprocessed and cleaned by SRF Data. Is copied over 1:1 to the `output` folder.
+* `input/parties.csv` - Contains party classifications made by SRF Data with the help of political scientists, used throughout all projects related to elections. Is copied over 1:1 to the `output` folder.
+
+### Description of output
+
+The following sections describe the results of the data preprocessing as stored in the `output` folder. 
+
+#### `output/data.csv`
+
+| Attribute | Type | Description | 
+|-------|------|---------------------------------------------------------------------|
+| id | String  | Unique identifier  |
+| party_id  |  Integer |  Party, references `id` in `output/parties.csv`  |
+| party_name  |    String | Contains the party name, but only if it belongs to a group in `output/parties.csv` (e.g. `id == 8`, `id == 16` or `id == 9` or if there is a special name such as "SP Oberwallis")  |
+|  canton |  String |   Official cantonal abbreviation  |
+|  transparency_level  |  Integer |  Level of transparency (`0` no response, `1` refused to give answer, `2` at least total budget specified)  |
+|  budget_total_lower  |  Integer |  Lower boundary of total budget as declared by the cantonal section  |
+|  budget_total_upper  |  Integer |  Upper boundary of total budget as declared by the cantonal section (if no range is given `budget_total_lower == budget_total_upper`) |
+|  budget_share_private_donors  |  String |  Share of budget coming from private donors (see survey questions above)  |
+|  budget_share_corporate_donors  |  String | Share of budget coming from corporate donors (see survey questions above)  |
+|  budget_share_candidates_elected  |  String | Share of budget coming from candidates OR already elected representatives (e.g. in the form of fees, see survey questions above)   |
+|  budget_share_members  |  String |  Share of budget coming from member fees (see survey questions above)  |
+|  budget_share_others  |  String | Share of budget coming from other sources (see survey questions above)   |
+|  budget_share_others_description  |  String | Description of other sources by the cantonal section |
+|  comment_by_party |  String |  Additional comments made by the cantonal section  |
+
+#### `../frontend/src/assets/gsheets/data.json` 
+
+Basically the same content as `data.csv` but in JSON format. Used directly by the frontend application. 
+
+### Lookup tables 
+
+#### `output/parties.csv`
+
+Contains party classifications made by SRF Data with the help of political scientists, used throughout all projects related to elections. 
+
+| Attribute | Type | Description | 
+|-------|------|---------------------------------------------------------------------|
+| message.code | String  | Used for frontend purposes solely  |
+|  id  |  Integer |  Unique identifier, referenced from `output/data.csv` |
+|  abbr_*  |  String |  Abbreviation, but with slightly more information, used for frontend purposes  |
+|  legend_*  |  String |  Abbreviation, but with slightly more information, used for frontend purposes  |
+|  name_*  |  String |  Full name  |
+|  sortorder  |  Integer | Used for frontend purposes solely |
+
+## Preparations
+
+
+```{r, echo=FALSE}
+detachAllPackages <- function() {
+  basic.packages.blank <-  c("stats", "graphics", "grDevices", "utils", "datasets", "methods", "base")
+  basic.packages <- paste("package:", basic.packages.blank, sep = "")
+  
+  package.list <- search()[ifelse(unlist(gregexpr("package:", search())) == 1, TRUE, FALSE)]
+  
+  package.list <- setdiff(package.list, basic.packages)
+  
+  if (length(package.list) > 0)  for (package in package.list) {
+    detach(package, character.only = TRUE, unload = TRUE)
+    print(paste("package ", package, " detached", sep = ""))
+  }
+  
+  #   # unload namespace
+  #   lapply(rev(setdiff(loadedNamespaces(), basic.packages.blank)), function(pkg){
+  #     unloadNamespace(pkg)
+  #     print(paste("namespace ", package, " unloaded", sep = ""))
+  #   })
+}
+
+detachAllPackages()
+
+rm(list=ls(all=TRUE)) 
+
+# Adapt working directory! 
+path_to_wd <- switch(EXPR = system2("whoami", stdout = TRUE),
+                     "johndoe" = "~",
+                     NULL)
+if ( is.null(path_to_wd) )
+{
+  print("WARNING: No working directory specified for current user")
+} else
+{
+  setwd(path_to_wd)
+}
+```
+
+### Define packages
+
+```{r define packages}
+# von https://mran.revolutionanalytics.com/web/packages/checkpoint/vignettes/using-checkpoint-with-knitr.html
+cat("library(magrittr)
+library(tidyr)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(jsonlite)", 
+file = "manifest.R")
+package_date <- "2015-08-01"
+
+```
+
+### Install packages
+
+```{r install packages}
+if(!require(checkpoint)) {
+  if(!require(devtools)){
+    install.packages("devtools", repos = "http://cran.us.r-project.org")
+    require(devtools)
+  }
+  devtools::install_github("checkpoint", username = "RevolutionAnalytics", ref = "v0.3.2", repos = "http://cran.us.r-project.org")
+  require(checkpoint)
+}
+if(!dir.exists("~/.checkpoint")){
+  dir.create("~/.checkpoint")
+}
+checkpoint(snapshotDate = package_date, project = path_to_wd, verbose = T, scanForPackages = T, use.knitr = F)
+rm(package_date)
+```
+
+### Load packages
+
+```{r load packages}
+source("manifest.R")
+unlink("manifest.R")
+```
+
+## Read in Data
+
+```{r read in data}
+# read in and save in output folder
+destination_data <- read.csv("input/data.csv")
+parties <- read.csv("input/parties.csv")
+
+# save
+write.csv(destination_data, "output/data.csv", row.names = F, quote = T, na = "")
+write.csv(parties, "output/parties.csv", row.names = F, quote = T, na = "")
+```
+
+
+
+## Analysis
+
+### Transparency per party
+
+```{r transparency per party}
+# count == 2 p.P.
+perparty <- destination_data %>% 
+  group_by(party_id) %>% 
+  summarize(count_transparent = sum(transparency_level == 2), count_all = sum(transparency_level >= 0), count_percentage = count_transparent/count_all) %>% 
+  left_join(parties, by = c("party_id" = "id")) %>% 
+  select(abbr_en, count_transparent, count_all, count_percentage) %>% 
+  arrange(desc(count_transparent), desc(count_percentage)) 
+perparty
+# perparty %>% 
+#   write.csv("output/perparty.csv")
+```
+
+### Transparency per canton
+
+```{r transparency per canton}
+# count == 2 p.P.
+percanton <- destination_data %>% 
+  group_by(canton) %>% 
+  summarize(count_transparent = sum(transparency_level == 2), count_all = sum(transparency_level >= 0), count_percentage = count_transparent/count_all) %>% 
+  select(canton, count_transparent, count_all, count_percentage) %>% 
+  arrange(desc(count_transparent), desc(count_percentage))
+percanton %>% 
+  as.data.frame()
+# percanton %>% 
+#   write.csv("output/percanton.csv")
+```
+
+
+### Total budget / estimation
+
+```{r total budget}
+overall_budget <- destination_data %>% filter() %>% summarize(sum_lower = sum(budget_total_lower, na.rm = T), sum_upper = sum(budget_total_upper, na.rm = T))
+transparency_rate <- destination_data %>% filter(transparency_level == 2) %>% summarise(count = n()) / nrow(destination_data)
+response_rate <- destination_data %>% filter(transparency_level >= 1) %>% summarise(count = n()) / nrow(destination_data)
+
+estimation <- overall_budget / transparency_rate[1,1]
+```
+
+Based on our data at hand we can say that parties spend between `r as.integer(overall_budget$sum_lower)` and `r as.integer(overall_budget$sum_upper)` Swiss francs.
+Based on our data at hand and a transparency rate of `r paste(as.integer(transparency_rate[1,1] * 100), "%")`, we can estimate that cantonal parties spend between `r as.integer(estimation$sum_lower)` and `r as.integer(estimation$sum_upper)` Swiss francs. *Note*: This is a very conservative estimate, since the parties spending the most (SVP, FDP) are usually the ones that are not transparent. And it is also an uncertain estimate, because it does not consider the inter-cantonal budget- and transparency distribution.
+
